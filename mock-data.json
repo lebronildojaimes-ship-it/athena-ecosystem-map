@@ -1,0 +1,246 @@
+{
+  "schemaVersion": "1.0",
+  "meta": {
+    "probeVersion": "athena-probe 0.9.1",
+    "observedAt": "2026-08-25T17:55:00Z",
+    "readOnly": true,
+    "integrity": {
+      "status": "verified",
+      "algorithm": "sha256",
+      "hash": "e7c3a91b4f0d62a8c5e1b7d94a3f8c2e1b6d0a7c9e4f1b8a2d5c7e0f3a6b9c1d"
+    },
+    "network": {
+      "label": "LAN",
+      "cidr": "192.168.1.0/24"
+    }
+  },
+  "profiles": [
+    {
+      "id": "baseline",
+      "label": "Baseline",
+      "summary": "Required LAN hosts only. Optional nodes stay visible but are not scored.",
+      "expected": {
+        "cuda1": ["host", "ssh"],
+        "workstation1": ["host"]
+      }
+    },
+    {
+      "id": "athena-core",
+      "label": "Athena Core",
+      "summary": "Workstation application stack plus CUDA1 presence.",
+      "expected": {
+        "cuda1": ["host", "ssh"],
+        "workstation1": [
+          "host",
+          "open-webui",
+          "odysseus",
+          "searxng",
+          "ntfy",
+          "chromadb"
+        ]
+      }
+    },
+    {
+      "id": "cuda-assist",
+      "label": "CUDA Assist",
+      "summary": "GPU inference path on CUDA2, with CUDA1 and the workstation as required hosts.",
+      "expected": {
+        "cuda1": ["host", "ssh"],
+        "cuda2": ["host", "open-webui", "ollama"],
+        "workstation1": ["host"]
+      }
+    },
+    {
+      "id": "full-ecosystem",
+      "label": "Full Ecosystem",
+      "summary": "Every node is expected. Laptop remains unconfirmed until evidence arrives — never labelled offline without that evidence.",
+      "expected": {
+        "cuda1": ["host", "ssh"],
+        "cuda2": ["host", "open-webui", "ollama"],
+        "workstation1": [
+          "host",
+          "open-webui",
+          "odysseus",
+          "searxng",
+          "ntfy",
+          "chromadb"
+        ],
+        "laptop": ["host"]
+      }
+    }
+  ],
+  "defaultProfileId": "athena-core",
+  "nodes": [
+    {
+      "id": "cuda1",
+      "logicalName": "CUDA1",
+      "hostname": "cuda1",
+      "ip": "192.168.1.17",
+      "platform": "CachyOS",
+      "role": "GPU host",
+      "host": {
+        "state": "online",
+        "lastConfirmed": "2026-08-25T17:54:48Z",
+        "evidenceSource": "ICMP echo"
+      },
+      "notes": [
+        "No AI containers currently required."
+      ],
+      "restrictions": [],
+      "services": [
+        {
+          "id": "ssh",
+          "name": "SSH",
+          "state": "ready",
+          "port": 22,
+          "binding": "network-facing",
+          "remotelyReachable": true,
+          "evidenceSource": "TCP 22 banner",
+          "lastConfirmed": "2026-08-25T17:54:47Z"
+        },
+        {
+          "id": "ai-containers",
+          "name": "AI containers",
+          "state": "inactive",
+          "port": null,
+          "binding": "localhost-only",
+          "remotelyReachable": false,
+          "evidenceSource": "Local inventory",
+          "lastConfirmed": "2026-08-25T17:54:40Z",
+          "reason": "No AI containers currently required."
+        }
+      ]
+    },
+    {
+      "id": "cuda2",
+      "logicalName": "CUDA2",
+      "hostname": "cuda2",
+      "ip": "192.168.1.175",
+      "role": "GPU host",
+      "host": {
+        "state": "online",
+        "lastConfirmed": "2026-08-25T17:54:42Z",
+        "evidenceSource": "ICMP echo"
+      },
+      "notes": [
+        "Direct LAN service access is firewall-restricted."
+      ],
+      "restrictions": [
+        "Host is online. Open WebUI and Ollama are locally verified ready, but inbound LAN to their ports is denied by the host firewall."
+      ],
+      "services": [
+        {
+          "id": "open-webui",
+          "name": "Open WebUI",
+          "state": "ready",
+          "port": 8080,
+          "binding": "network-facing",
+          "remotelyReachable": false,
+          "evidenceSource": "Local HTTP health",
+          "lastConfirmed": "2026-08-25T17:54:41Z",
+          "reason": "Firewall restricts direct LAN access to this port."
+        },
+        {
+          "id": "ollama",
+          "name": "Ollama",
+          "state": "ready",
+          "port": 11434,
+          "binding": "network-facing",
+          "remotelyReachable": false,
+          "evidenceSource": "Local HTTP /api/tags",
+          "lastConfirmed": "2026-08-25T17:54:40Z",
+          "reason": "Firewall restricts direct LAN access to this port.",
+          "models": [
+            { "name": "qwen3:14b", "state": "ready" },
+            { "name": "qwen3:4b", "state": "ready" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workstation1",
+      "logicalName": "Workstation1",
+      "hostname": "workstation1",
+      "ip": "192.168.1.69",
+      "role": "Application host",
+      "host": {
+        "state": "online",
+        "lastConfirmed": "2026-08-25T17:54:51Z",
+        "evidenceSource": "Local presence"
+      },
+      "notes": [
+        "Application services are localhost-only."
+      ],
+      "restrictions": [],
+      "services": [
+        {
+          "id": "open-webui",
+          "name": "Open WebUI",
+          "state": "ready",
+          "port": 8080,
+          "binding": "localhost-only",
+          "remotelyReachable": false,
+          "evidenceSource": "Local HTTP health",
+          "lastConfirmed": "2026-08-25T17:54:50Z"
+        },
+        {
+          "id": "odysseus",
+          "name": "Odysseus",
+          "state": "ready",
+          "port": 8787,
+          "binding": "localhost-only",
+          "remotelyReachable": false,
+          "evidenceSource": "Local socket",
+          "lastConfirmed": "2026-08-25T17:54:49Z"
+        },
+        {
+          "id": "searxng",
+          "name": "SearXNG",
+          "state": "ready",
+          "port": 8888,
+          "binding": "localhost-only",
+          "remotelyReachable": false,
+          "evidenceSource": "Local HTTP health",
+          "lastConfirmed": "2026-08-25T17:54:48Z"
+        },
+        {
+          "id": "ntfy",
+          "name": "ntfy",
+          "state": "ready",
+          "port": 2586,
+          "binding": "localhost-only",
+          "remotelyReachable": false,
+          "evidenceSource": "Local HTTP health",
+          "lastConfirmed": "2026-08-25T17:54:47Z"
+        },
+        {
+          "id": "chromadb",
+          "name": "ChromaDB",
+          "state": "ready",
+          "port": 8000,
+          "binding": "localhost-only",
+          "remotelyReachable": false,
+          "evidenceSource": "Local HTTP heartbeat",
+          "lastConfirmed": "2026-08-25T17:54:46Z"
+        }
+      ]
+    },
+    {
+      "id": "laptop",
+      "logicalName": "Laptop",
+      "hostname": "laptop",
+      "ip": "192.168.1.89",
+      "role": "Portable",
+      "host": {
+        "state": "unconfirmed",
+        "lastConfirmed": "2026-08-25T11:33:00Z",
+        "evidenceSource": "DHCP last-seen"
+      },
+      "notes": [
+        "Unconfirmed in this snapshot. Not labelled offline."
+      ],
+      "restrictions": [],
+      "services": []
+    }
+  ]
+}
